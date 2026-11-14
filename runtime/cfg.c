@@ -423,8 +423,8 @@ static const CfgMeta metas[] = {
     {"MIRROR_HOT", "0", "0..1000", RESTART}, {"FREEZE_IDLE", "1800", "0..100000", RESTART},
     {"SUBMIT_FINISH_KINDS", "31", "0..31", RESTART},   // vk_sync.c res_mask
     {"FOLIAGE", "full", "full|reduced|off", RESTART},   // vk_exec_draw.c foliage_skip
-    {"VRAM_HEAP_LIMIT", "0", NULL, RESTART},   // vk_device.c vram_heap_limits: auto, 0 or MiB
-    {"VRAM_RESERVE_MB", "0", "0..4096", RESTART},   // vk_vma_budget.c: video memory kept free of VMA's allocations
+    {"VRAM_HEAP_LIMIT", "auto", NULL, RESTART},   // vk_device.c vram_heap_limits: auto, 0 or MiB
+    {"VRAM_RESERVE_MB", "256", "0..4096", RESTART},   // vk_vma_budget.c: video memory kept free of VMA's allocations
     // vk_memory.c vk_upload_end: MiB of staging before a batch goes early. 0: at 64 MiB, the staging pool's own limit
     // (STG_FLUSH), which also holds for every value above it
     {"UPLOAD_BATCH_MB", "0", NULL, RESTART},

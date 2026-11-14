@@ -357,11 +357,11 @@ retry:
 // the next memory type that allows it (the other device-local heap first), for every allocation: textures, render
 // targets, VRAM mirrors, pools. The limit is each device-local heap's budget when the device is made (VK_EXT_memory_budget,
 // what other programs leave) less a margin for memory VMA does not see (swapchain, FidelityFX): a tenth, at least
-// 256 MiB. NX2NAVI_VRAM_HEAP_LIMIT: auto, 0 (no limits, the default) or a number of MiB for the largest device-local
+// 256 MiB. NX2NAVI_VRAM_HEAP_LIMIT: auto (the default), 0 (no limits) or a number of MiB for the largest device-local
 // heap. The low-end GPU mode set auto up to 0.10.1.
 static int vram_heap_limits(VkDeviceSize *limit) {
     const char *e = cfg_get("NX2NAVI_VRAM_HEAP_LIMIT");
-    long mb = !e || !*e ? 0 : strcmp(e, "auto") ? atol(e) : -1;   // unset: no limits
+    long mb = !e || !*e ? -1 : strcmp(e, "auto") ? atol(e) : -1;   // unset: auto, as the low-end GPU mode set
     if (!mb) return 0;
     VkPhysicalDeviceMemoryBudgetPropertiesEXT b = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_BUDGET_PROPERTIES_EXT};
     VkPhysicalDeviceMemoryProperties2 p2 = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_MEMORY_PROPERTIES_2,

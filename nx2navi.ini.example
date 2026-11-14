@@ -466,8 +466,8 @@
 # frame in system memory. tex_clobber = 1 gives a texture read after another image was drawn over its memory memory
 # of its own. foliage = reduced draws no small grass or moss, off no foliage.
 # mesh_emulation = 0
-# vram_heap_limit = 0
-# vram_reserve_mb = 0
+# vram_heap_limit = auto
+# vram_reserve_mb = 256
 # upload_batch_mb = 0
 # mirror_stage = 0
 # submit_finish_gpu = 1

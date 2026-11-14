@@ -191,7 +191,7 @@ def main():
     # gives none another default, and the log says once that the line does nothing; the same words as cfg_bool, from
     # the file and from the environment. The mode's keys are read by themselves, with or without the switch.
     gone = 'the low-end GPU mode was removed'
-    unset = "mesh_emulation '(unset)' vram_reserve_mb '(unset)' default '0'"
+    unset = "mesh_emulation '(unset)' vram_reserve_mb '(unset)' default '256'"
     for text, extra, want, said in (
             ('low_end_gpu = Off\n', None, f'bool 0 {unset}', 0),
             ('low_end_gpu = 0 ; note\n', None, f'bool 0 {unset}', 0),
@@ -200,9 +200,9 @@ def main():
             ('; nothing\n', {'NX2NAVI_LOW_END_GPU': 'FALSE'}, f'bool 0 {unset}', 0),
             ('; nothing\n', {'NX2NAVI_LOW_END_GPU': '0 ; x'}, f'bool 1 {unset}', 1),
             ('mesh_emulation = 1\nvram_reserve_mb = 512\n', None,
-             "bool 0 mesh_emulation '1' vram_reserve_mb '512' default '0'", 0),
+             "bool 0 mesh_emulation '1' vram_reserve_mb '512' default '256'", 0),
             ('low_end_gpu = 1\nmesh_emulation = 1\n', None,
-             "bool 1 mesh_emulation '1' vram_reserve_mb '(unset)' default '0'", 1)):
+             "bool 1 mesh_emulation '1' vram_reserve_mb '(unset)' default '256'", 1)):
         rc, out = run(exe, env, 'lowend', text, work, extra)
         what = text.strip().replace('\n', ', ') if extra is None else f"the environment's {extra['NX2NAVI_LOW_END_GPU']!r}"
         check(rc == 0 and f'got: {want}' in out and out.count(gone) == said,
