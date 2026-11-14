@@ -146,21 +146,29 @@ VkDeviceSize vk_meshfb_record(VkCommandBuffer cb, VkBuffer src, VkDeviceSize src
     if (has_task && M.cap_slots[i] > M.list_bytes / 4) M.cap_slots[i] = (uint32_t)(M.list_bytes / 4);
     *rec = M.rec;
     int n = 0;
-    vkCmdFillBuffer(cb, M.rec, at, REC_BYTES, 1), n++;
+    // The record in one command: a fill of the whole record followed by fills and copies into parts of it are
+    // transfer writes to the same bytes without a barrier between them, which the GPU may run in any order. On an
+    // RX 580 the whole-record fill of 1 landed after the vertex count in about half the draws, so the draw had one
+    // vertex per workgroup (nothing drawn), took the first instance or vertex as 1 (the wrong slots: white foliage)
+    // or dispatched one task workgroup of several: the foliage of the mesh programs flashed.
+    uint32_t r[REC_BYTES / 4];
+    for (uint32_t k = 0; k < REC_BYTES / 4; k++) r[k] = 1;
     // where the workgroup count goes: the task dispatch, or the mesh dispatch, the draw's instances and the report
-    VkDeviceSize to[3] = {has_task ? at : at + 16, at + 36, at + 48};
+    VkDeviceSize to[3] = {has_task ? 0 : 16, 36, 48};
     int nto = has_task ? 1 : 3;
-    if (!has_task) {
-        vkCmdFillBuffer(cb, M.rec, at + 32, 4, verts), n++;
-        vkCmdFillBuffer(cb, M.rec, at + 40, 8, 0), n++;
-        vkCmdFillBuffer(cb, M.rec, at + 52, 4, 0), n++;
-    }
-    if (src) {
+    if (!has_task) r[32 / 4] = verts, r[40 / 4] = 0, r[44 / 4] = 0, r[52 / 4] = 0;
+    if (!src)
+        for (int k = 0; k < nto; k++) r[to[k] / 4] = count;
+    vkCmdUpdateBuffer(cb, M.rec, at, REC_BYTES, r), n++;
+    if (src) {   // the count the GPU wrote, over the record just written: ordered after it
+        VkMemoryBarrier2 mb = {.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER_2, .srcStageMask = VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT,
+                               .srcAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT, .dstStageMask = VK_PIPELINE_STAGE_2_ALL_TRANSFER_BIT,
+                               .dstAccessMask = VK_ACCESS_2_TRANSFER_WRITE_BIT};
+        VkDependencyInfo di = {.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO, .memoryBarrierCount = 1, .pMemoryBarriers = &mb};
+        vkCmdPipelineBarrier2(cb, &di), n++;
         VkBufferCopy cp[3];
-        for (int k = 0; k < nto; k++) cp[k] = (VkBufferCopy){src_off, to[k], 4};
+        for (int k = 0; k < nto; k++) cp[k] = (VkBufferCopy){src_off, at + to[k], 4};
         vkCmdCopyBuffer(cb, src, M.rec, (uint32_t)nto, cp), n++;
-    } else {
-        for (int k = 0; k < nto; k++) vkCmdFillBuffer(cb, M.rec, to[k], 4, count), n++;
     }
     *cmds = n;
     return at;
